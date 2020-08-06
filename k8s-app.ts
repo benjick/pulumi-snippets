@@ -1,9 +1,9 @@
 import * as k8s from '@pulumi/kubernetes';
-import { provider } from './provider';
-import { image } from './docker-image';
+import { k8sProvider } from './k8s-provider'
 
-const appName = 'cool-app';
+const appName = 'my-app';
 const appLabels = { app: appName };
+const hostname = 'example.com'
 
 const deployment = new k8s.apps.v1.Deployment(
   appName,
@@ -17,14 +17,14 @@ const deployment = new k8s.apps.v1.Deployment(
           containers: [
             {
               name: appName,
-              image: image.id,
+              image: 'my-image',
             },
           ],
         },
       },
     },
   },
-  { provider },
+  { provider: k8sProvider },
 );
 
 const service = new k8s.core.v1.Service(
@@ -32,10 +32,48 @@ const service = new k8s.core.v1.Service(
   {
     metadata: { labels: deployment.spec.template.metadata.labels },
     spec: {
-      type: 'LoadBalancer',
+      type: 'NodePort',
       ports: [{ port: 3000, targetPort: 3000, protocol: 'TCP' }],
       selector: appLabels,
     },
   },
-  { provider },
+  { provider: k8sProvider, parent: deployment },
+);
+
+const ingress = new k8s.networking.v1beta1.Ingress(
+  appName,
+  {
+    metadata: {
+      labels: appLabels,
+      annotations: {
+        'cert-manager.io/cluster-issuer': 'letsencrypt-prod',
+        'kubernetes.io/ingress.class': 'nginx',
+      },
+    },
+    spec: {
+      tls: [
+        {
+          hosts: [hostname],
+          secretName: `${appName}-tls`,
+        },
+      ],
+      rules: [
+        {
+          host: hostname,
+          http: {
+            paths: [
+              {
+                path: '/',
+                backend: {
+                  serviceName: service.metadata.name,
+                  servicePort: service.spec.ports[0].port,
+                },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  },
+  { provider: k8sProvider, parent: deployment },
 );
