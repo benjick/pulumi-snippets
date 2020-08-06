@@ -5,7 +5,7 @@ import { k8sProvider } from './k8s-provider';
 const config = new pulumi.Config('digitalocean');
 const apiToken = config.requireSecret('token');
 
-export const externalDnsChart = new k8s.helm.v2.Chart(
+export const externalDnsChart = new k8s.helm.v3.Chart(
   'external-dns',
   {
     chart: 'external-dns',
@@ -25,6 +25,6 @@ export const externalDnsChart = new k8s.helm.v2.Chart(
     },
   },
   {
-    provider: provider,
+    provider: k8sProvider,
   },
 );
