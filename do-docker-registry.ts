@@ -13,7 +13,7 @@ const credentials = new digitalocean.ContainerRegistryDockerCredentials(
   {
     registryName: registry.name,
     write: true,
-    expirySeconds: 60 * 60 * 30, // 30 days
+    expirySeconds: 60 * 60 * 24 * 7, // 7 days
   },
 );
 
