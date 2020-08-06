@@ -1,11 +1,7 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
 import * as aws from '@pulumi/aws';
-import { cluster } from './cluster';
-import { servicesNamespace } from './services-ns';
-
-const current = pulumi.output(aws.getCallerIdentity({ async: true }));
-export const accountId = current.accountId;
+import { k8sProvider } from './k8s-provider';
 
 const config = new pulumi.Config();
 const baseDomain = config.require('baseDomain');
