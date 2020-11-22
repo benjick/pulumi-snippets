@@ -22,6 +22,10 @@ interface ConfigFilesArgs {
    */
   files: Record<string, Contents>;
   /**
+   * Optional: mode bits to use on created files by default. Must be a value between 0 and 0777. Defaults to 0644. Directories within the path are not affected by this setting. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set.
+   */
+  defaultMode?: pulumi.Input<number>;
+  /**
    * Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
    */
   metadata?: pulumi.Input<k8s.types.input.meta.v1.ObjectMeta>;
@@ -108,13 +112,14 @@ export class ConfigFiles extends pulumi.ComponentResource {
       name: volumeName,
       configMap: {
         name: this.configMap.metadata.name,
+        defaultMode: args.defaultMode,
       },
     };
   }
 
   /**
    * Run dedent on Output<string> | string
-   * 
+   *
    * @param contents file contents
    */
   static dedent(contents: Contents): Contents {
